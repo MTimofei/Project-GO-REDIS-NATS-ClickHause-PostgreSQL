@@ -27,3 +27,24 @@ func CreatePayloadItemRes(rows *sql.Rows) (jsonBytes []byte, err error) {
 	}
 	return jsonBytes, err
 }
+
+func CreatePayloadDeleteRes(rows *sql.Rows) (jsonBytes []byte, err error) {
+	var item Delete
+	for rows.Next() {
+		defer rows.Close()
+		err = rows.Scan(&item.Id, &item.CampaignId, &item.Removed)
+		if err != nil {
+			err = fmt.Errorf("Ошибка декодирования *sql.Rows:%q", err)
+			return nil, err
+		}
+	}
+
+	log.Println(item)
+
+	jsonBytes, err = json.Marshal(item)
+	if err != nil {
+		err = fmt.Errorf("Ошибка кодирования JSON:%q", err)
+		return nil, err
+	}
+	return jsonBytes, err
+}

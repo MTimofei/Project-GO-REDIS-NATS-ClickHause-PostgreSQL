@@ -61,3 +61,19 @@ func ParseRequestPatch(r *http.Request) (campaignId int, id int, payload Update,
 	}
 	return campaignId, id, payload, nil
 }
+
+func ParseRequestDelete(r *http.Request) (campaignId int, id int, err error) {
+
+	campaignId, err = strconv.Atoi(r.URL.Query().Get("campaignId"))
+	if err != nil {
+		err = fmt.Errorf("Ошибка чтения campaignId: %q", err)
+		return 0, 0, err
+	}
+	id, err = strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil {
+		err = fmt.Errorf("Ошибка чтения id: %q", err)
+		return 0, 0, err
+	}
+
+	return campaignId, id, nil
+}

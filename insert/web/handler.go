@@ -50,15 +50,13 @@ func (cesh *Cesh) handlerPatch(w http.ResponseWriter, r *http.Request) {
 
 	campaignId, id, payload, err := interaction.ParseRequestPatch(r)
 	if err != nil {
-		log.Println(err)
+		log.Println("ParseRequestPatch:", err)
 		return
 	}
 
-	log.Println(campaignId, id, payload.Name, payload.Description, err)
-
 	rows, err := interaction.TransactionPatch(w, cesh.PostgreasQL, campaignId, id, payload)
 	if err != nil {
-		log.Println("ERROR TransactionPost:", err)
+		log.Println("ERROR TransactionPatch:", err)
 		return
 	}
 
@@ -78,6 +76,30 @@ func (cesh *Cesh) handlerPatch(w http.ResponseWriter, r *http.Request) {
 func (cesh *Cesh) handlerDelete(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+
+	campaignId, id, err := interaction.ParseRequestDelete(r)
+	if err != nil {
+		log.Println("ParseRequestDelete:", err)
+		return
+	}
+
+	rows, err := interaction.TransactionDelete(w, cesh.PostgreasQL, campaignId, id)
+	if err != nil {
+		log.Println("ERROR TransactionDelete:", err)
+		return
+	}
+
+	jsonBytes, err := interaction.CreatePayloadDeleteRes(rows)
+	if err != nil {
+		log.Println("Ошибка записи JSON:", err)
+		return
+	}
+
+	_, err = w.Write(jsonBytes)
+	if err != nil {
+		log.Println(fmt.Errorf("Ошибка записи JSON:%q", err))
+		return
 	}
 }
 
