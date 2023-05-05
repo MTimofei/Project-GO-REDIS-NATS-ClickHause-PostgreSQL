@@ -143,3 +143,68 @@ func TransactionPatch(w http.ResponseWriter, db *sql.DB, campaignId int, id int,
 
 	return rows, nil
 }
+
+func TransactionDelete(w http.ResponseWriter, db *sql.DB, campaignId int, id int) (rows *sql.Rows, err error) {
+	tx, err := db.Begin()
+	if err != nil {
+		err = fmt.Errorf("open transaction %q", err)
+		errmy.TransactionPost(w, tx)
+		return nil, err
+	}
+
+	var exists bool
+	query := fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM items WHERE id=%d AND campaign_id=%d);", id, campaignId)
+	log.Println(query)
+
+	err = db.QueryRow(query).Scan(&exists)
+	if err != nil {
+		err = fmt.Errorf("chek record: %q", err)
+		errmy.TransactionPost(w, tx)
+		return nil, err
+	}
+	if !exists {
+		err = fmt.Errorf("chek record:The record does not exist")
+		errmy.TransactionPost(w, tx)
+		return nil, err
+	}
+
+	query = fmt.Sprintf("SELECT * FROM items WHERE id=%d AND campaign_id=%d FOR UPDATE;", id, campaignId)
+	log.Println(query)
+
+	_, err = tx.Exec(query)
+	if err != nil {
+		err = fmt.Errorf("blok %q", err)
+		errmy.TransactionPost(w, tx)
+		return nil, err
+	}
+
+	query = fmt.Sprintf("UPDATE items SET  removed=true WHERE id=%d AND campaign_id=%d;", id, campaignId)
+	log.Println(query)
+
+	_, err = tx.Exec(query)
+	if err != nil {
+		err = fmt.Errorf("set %q", err)
+		errmy.TransactionPost(w, tx)
+		return nil, err
+
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		err = fmt.Errorf("close transaction %q", err)
+		errmy.TransactionPost(w, tx)
+		return nil, err
+	}
+
+	query = fmt.Sprintf("SELECT id,campaign_Id,removed FROM items WHERE id = %d;", id)
+	log.Println(query)
+
+	rows, err = db.Query(query)
+
+	if err != nil {
+		err = fmt.Errorf("get %q", err)
+		return nil, err
+	}
+
+	return rows, nil
+}
