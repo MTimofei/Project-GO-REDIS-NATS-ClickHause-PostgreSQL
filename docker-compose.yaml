@@ -1,0 +1,42 @@
+version: '3.5'
+
+services: ##сревисы 
+  service_db_postgreSQL: ## название сервиса
+    container_name: db_postgreSQL ## название контейнера
+    ports: ## настройка портов
+      - "5432:5432" ## открытие портов в контейнере 
+    environment: ##предворительная настройка
+      - POSTGRES_PASSWORD=1234 ##устонавливается пороль
+      - POSTGRES_USER=pet ##устонавливаем имя 
+    image: postgres:14.3-alpine ## образ для системы
+
+  service_nats:
+    container_name: service_nats
+    ports:
+      - "4222:4222"
+      - "6222:6222"
+      - "8222:8222"
+    image: nats:2.9-alpine3.17
+
+  service_db_redis:
+    container_name: service_db_redis
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=5678
+    volumes:
+      - ./redis.conf:/etc/redis/redis.conf
+    command: redis-server /etc/redis/redis.conf  
+    image: redis:7-alpine
+    
+
+  service_db_clickhouse:
+    container_name: service_db_clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    # environment:
+    #   - CLICKHOUSE_PASSWORD=9012
+    #   - POSTGRES_USER=pet
+    image: yandex/clickhouse-server:21.8.14.5-alpine
+    #command: ["clickhouse-server", "--password", "${CLICKHOUSE_PASSWORD}"]
