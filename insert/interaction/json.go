@@ -7,18 +7,18 @@ type Post struct {
 }
 
 type Item struct {
-	Id          int64     `json:"id"`
-	CampaignId  int64     `json:"campaignId"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Priority    string    `json:"priority"`
-	Removed     bool      `json:"removed"`
-	CreatedAt   time.Time `json:"createdAt"`
+	Id          int64       `json:"id"`
+	CampaignId  int64       `json:"campaignId"`
+	Name        string      `json:"name"`
+	Description interface{} `json:"description"`
+	Priority    string      `json:"priority"`
+	Removed     bool        `json:"removed"`
+	CreatedAt   time.Time   `json:"createdAt"`
 }
 
 type Update struct {
-	Name        string `json:"update"`
-	Description string `json:"description"`
+	Name        string      `json:"name"`
+	Description interface{} `json:"description"`
 }
 
 type Delete struct {

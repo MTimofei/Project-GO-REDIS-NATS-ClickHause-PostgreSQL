@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-func CreatePayloadPostRes(rows *sql.Rows) (jsonBytes []byte, err error) {
+func CreatePayloadItemRes(rows *sql.Rows) (jsonBytes []byte, err error) {
 	var item Item
 	for rows.Next() {
 		defer rows.Close()
