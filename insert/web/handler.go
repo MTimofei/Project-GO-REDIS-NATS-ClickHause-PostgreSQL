@@ -107,4 +107,22 @@ func (cesh *Cesh) handlerGet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
+
+	rows, err := interaction.TransactionGet(w, cesh.PostgreasQL)
+	if err != nil {
+		log.Println("ERROR TransactionGet:", err)
+		return
+	}
+
+	jsonBytes, err := interaction.CreatePayloadItemsRes(rows)
+	if err != nil {
+		log.Println("Ошибка записи JSON:", err)
+		return
+	}
+
+	_, err = w.Write(jsonBytes)
+	if err != nil {
+		log.Println(fmt.Errorf("Ошибка записи JSON:%q", err))
+		return
+	}
 }

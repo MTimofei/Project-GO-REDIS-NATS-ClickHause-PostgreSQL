@@ -20,14 +20,14 @@ func TransactionPost(w http.ResponseWriter, db *sql.DB, campaignId int, payload 
 	tx, err := db.Begin()
 	if err != nil {
 		err = fmt.Errorf("open transaction %q", err)
-		errmy.TransactionPost(w, tx)
+		errmy.Transaction(w, tx)
 		return nil, err
 	}
 
 	_, err = tx.Exec("LOCK TABLE items IN SHARE MODE")
 	if err != nil {
 		err = fmt.Errorf("blok %q", err)
-		errmy.TransactionPost(w, tx)
+		errmy.Transaction(w, tx)
 		return nil, err
 	}
 
@@ -38,7 +38,7 @@ func TransactionPost(w http.ResponseWriter, db *sql.DB, campaignId int, payload 
 	result, err := tx.Query(query)
 	if err != nil {
 		err = fmt.Errorf("set %q", err)
-		errmy.TransactionPost(w, tx)
+		errmy.Transaction(w, tx)
 		return nil, err
 
 	}
@@ -53,7 +53,7 @@ func TransactionPost(w http.ResponseWriter, db *sql.DB, campaignId int, payload 
 	err = tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("close transaction %q", err)
-		errmy.TransactionPost(w, tx)
+		errmy.Transaction(w, tx)
 		return nil, err
 	}
 
@@ -83,7 +83,7 @@ func TransactionPatch(w http.ResponseWriter, db *sql.DB, campaignId int, id int,
 	tx, err := db.Begin()
 	if err != nil {
 		err = fmt.Errorf("open transaction %q", err)
-		errmy.TransactionPost(w, tx)
+		errmy.Transaction(w, tx)
 		return nil, err
 	}
 
@@ -94,12 +94,12 @@ func TransactionPatch(w http.ResponseWriter, db *sql.DB, campaignId int, id int,
 	err = db.QueryRow(query).Scan(&exists)
 	if err != nil {
 		err = fmt.Errorf("chek record: %q", err)
-		errmy.TransactionPost(w, tx)
+		errmy.Transaction(w, tx)
 		return nil, err
 	}
 	if !exists {
 		err = fmt.Errorf("chek record:The record does not exist")
-		errmy.TransactionPost(w, tx)
+		errmy.TransactionNotFound(w, tx)
 		return nil, err
 	}
 
@@ -109,7 +109,7 @@ func TransactionPatch(w http.ResponseWriter, db *sql.DB, campaignId int, id int,
 	_, err = tx.Exec(query)
 	if err != nil {
 		err = fmt.Errorf("blok %q", err)
-		errmy.TransactionPost(w, tx)
+		errmy.Transaction(w, tx)
 		return nil, err
 	}
 
@@ -119,7 +119,7 @@ func TransactionPatch(w http.ResponseWriter, db *sql.DB, campaignId int, id int,
 	_, err = tx.Exec(query)
 	if err != nil {
 		err = fmt.Errorf("set %q", err)
-		errmy.TransactionPost(w, tx)
+		errmy.Transaction(w, tx)
 		return nil, err
 
 	}
@@ -127,7 +127,7 @@ func TransactionPatch(w http.ResponseWriter, db *sql.DB, campaignId int, id int,
 	err = tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("close transaction %q", err)
-		errmy.TransactionPost(w, tx)
+		errmy.Transaction(w, tx)
 		return nil, err
 	}
 
@@ -148,7 +148,7 @@ func TransactionDelete(w http.ResponseWriter, db *sql.DB, campaignId int, id int
 	tx, err := db.Begin()
 	if err != nil {
 		err = fmt.Errorf("open transaction %q", err)
-		errmy.TransactionPost(w, tx)
+		errmy.Transaction(w, tx)
 		return nil, err
 	}
 
@@ -159,12 +159,12 @@ func TransactionDelete(w http.ResponseWriter, db *sql.DB, campaignId int, id int
 	err = db.QueryRow(query).Scan(&exists)
 	if err != nil {
 		err = fmt.Errorf("chek record: %q", err)
-		errmy.TransactionPost(w, tx)
+		errmy.Transaction(w, tx)
 		return nil, err
 	}
 	if !exists {
 		err = fmt.Errorf("chek record:The record does not exist")
-		errmy.TransactionPost(w, tx)
+		errmy.TransactionNotFound(w, tx)
 		return nil, err
 	}
 
@@ -174,7 +174,7 @@ func TransactionDelete(w http.ResponseWriter, db *sql.DB, campaignId int, id int
 	_, err = tx.Exec(query)
 	if err != nil {
 		err = fmt.Errorf("blok %q", err)
-		errmy.TransactionPost(w, tx)
+		errmy.Transaction(w, tx)
 		return nil, err
 	}
 
@@ -184,7 +184,7 @@ func TransactionDelete(w http.ResponseWriter, db *sql.DB, campaignId int, id int
 	_, err = tx.Exec(query)
 	if err != nil {
 		err = fmt.Errorf("set %q", err)
-		errmy.TransactionPost(w, tx)
+		errmy.Transaction(w, tx)
 		return nil, err
 
 	}
@@ -192,7 +192,7 @@ func TransactionDelete(w http.ResponseWriter, db *sql.DB, campaignId int, id int
 	err = tx.Commit()
 	if err != nil {
 		err = fmt.Errorf("close transaction %q", err)
-		errmy.TransactionPost(w, tx)
+		errmy.Transaction(w, tx)
 		return nil, err
 	}
 
@@ -203,6 +203,42 @@ func TransactionDelete(w http.ResponseWriter, db *sql.DB, campaignId int, id int
 
 	if err != nil {
 		err = fmt.Errorf("get %q", err)
+		return nil, err
+	}
+
+	return rows, nil
+}
+
+func TransactionGet(w http.ResponseWriter, db *sql.DB) (rows *sql.Rows, err error) {
+
+	tx, err := db.Begin()
+	if err != nil {
+		err = fmt.Errorf("open transaction %q", err)
+		errmy.Transaction(w, tx)
+		return nil, err
+	}
+
+	_, err = tx.Exec("LOCK TABLE items IN SHARE MODE")
+	if err != nil {
+		err = fmt.Errorf("blok %q", err)
+		errmy.Transaction(w, tx)
+		return nil, err
+	}
+
+	query := "SELECT * FROM items WHERE removed=false;"
+	log.Println(query)
+
+	rows, err = db.Query(query)
+	if err != nil {
+		err = fmt.Errorf("get %q", err)
+		errmy.Transaction(w, tx)
+		return nil, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		err = fmt.Errorf("close transaction %q", err)
+		errmy.Transaction(w, tx)
 		return nil, err
 	}
 
