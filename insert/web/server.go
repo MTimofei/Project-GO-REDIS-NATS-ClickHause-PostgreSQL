@@ -10,6 +10,7 @@ import (
 
 type Cesh struct {
 	PostgreasQL *sql.DB
+	RediaAddr   *string
 }
 
 func (cesh *Cesh) StartServer(addr *string) (err error) {

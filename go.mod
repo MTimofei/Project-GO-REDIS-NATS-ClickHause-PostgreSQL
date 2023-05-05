@@ -3,6 +3,7 @@ module git_p/test
 go 1.20
 
 require (
+	github.com/gomodule/redigo v1.8.9
 	github.com/lib/pq v1.10.9
 	github.com/nats-io/nats.go v1.25.0
 )

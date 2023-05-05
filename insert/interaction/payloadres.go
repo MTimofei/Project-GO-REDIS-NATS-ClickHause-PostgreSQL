@@ -6,20 +6,8 @@ import (
 	"fmt"
 )
 
-func CreatePayloadItemRes(rows *sql.Rows) (jsonBytes []byte, err error) {
-	var item Item
-	for rows.Next() {
-		defer rows.Close()
-		err = rows.Scan(&item.Id, &item.CampaignId, &item.Name, &item.Description, &item.Priority, &item.Removed, &item.CreatedAt)
-		if err != nil {
-			err = fmt.Errorf("Ошибка декодирования *sql.Rows:%q", err)
-			return nil, err
-		}
-	}
-
-	// log.Println(item)
-
-	jsonBytes, err = json.Marshal(item)
+func CreatePayloadItemRes(item *Item) (jsonBytes []byte, err error) {
+	jsonBytes, err = json.Marshal(*item)
 	if err != nil {
 		err = fmt.Errorf("Ошибка кодирования JSON:%q", err)
 		return nil, err
@@ -27,20 +15,8 @@ func CreatePayloadItemRes(rows *sql.Rows) (jsonBytes []byte, err error) {
 	return jsonBytes, err
 }
 
-func CreatePayloadDeleteRes(rows *sql.Rows) (jsonBytes []byte, err error) {
-	var item Delete
-	for rows.Next() {
-		defer rows.Close()
-		err = rows.Scan(&item.Id, &item.CampaignId, &item.Removed)
-		if err != nil {
-			err = fmt.Errorf("Ошибка декодирования *sql.Rows:%q", err)
-			return nil, err
-		}
-	}
-
-	// log.Println(item)
-
-	jsonBytes, err = json.Marshal(item)
+func CreatePayloadDeleteRes(item *Delete) (jsonBytes []byte, err error) {
+	jsonBytes, err = json.Marshal(*item)
 	if err != nil {
 		err = fmt.Errorf("Ошибка кодирования JSON:%q", err)
 		return nil, err
@@ -48,8 +24,16 @@ func CreatePayloadDeleteRes(rows *sql.Rows) (jsonBytes []byte, err error) {
 	return jsonBytes, err
 }
 
-func CreatePayloadItemsRes(rows *sql.Rows) (jsonBytes []byte, err error) {
-	var items []Item
+func CreatePayloadItemsRes(items *[]Item) (jsonBytes []byte, err error) {
+	jsonBytes, err = json.Marshal(items)
+	if err != nil {
+		err = fmt.Errorf("Ошибка кодирования JSON:%q", err)
+		return nil, err
+	}
+	return jsonBytes, err
+}
+
+func CreateItems(rows *sql.Rows) (items []Item, err error) {
 	for rows.Next() {
 		var item Item
 		defer rows.Close()
@@ -60,13 +44,31 @@ func CreatePayloadItemsRes(rows *sql.Rows) (jsonBytes []byte, err error) {
 		}
 		items = append(items, item)
 	}
+	return items, err
+}
 
-	// log.Println(items)
-
-	jsonBytes, err = json.Marshal(items)
-	if err != nil {
-		err = fmt.Errorf("Ошибка кодирования JSON:%q", err)
-		return nil, err
+func CreateDelete(rows *sql.Rows) (item Delete, err error) {
+	for rows.Next() {
+		defer rows.Close()
+		err = rows.Scan(&item.Id, &item.CampaignId, &item.Removed)
+		if err != nil {
+			err = fmt.Errorf("Ошибка декодирования *sql.Rows:%q", err)
+			return Delete{}, err
+		}
 	}
-	return jsonBytes, err
+
+	return item, nil
+}
+
+func CreateItem(rows *sql.Rows) (item Item, err error) {
+	for rows.Next() {
+		defer rows.Close()
+		err = rows.Scan(&item.Id, &item.CampaignId, &item.Name, &item.Description, &item.Priority, &item.Removed, &item.CreatedAt)
+		if err != nil {
+			err = fmt.Errorf("Ошибка декодирования *sql.Rows:%q", err)
+			return Item{}, err
+		}
+	}
+
+	return item, nil
 }
