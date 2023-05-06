@@ -3,17 +3,10 @@ package interaction
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 
 	"git_p/test/pkg/errmy"
 )
-
-// func NewCampaign(db *sql.DB, name string) (rows *sql.Rows, err error) {
-// 	query := fmt.Sprintf("INSERT INTO campaingns (name) VALUES ('%s') RETURNING id;", name)
-// 	rows, err = db.Query(query)
-// 	return
-// }
 
 func TransactionPost(w http.ResponseWriter, db *sql.DB, campaignId int, payload Post) (rows *sql.Rows, err error) {
 
@@ -33,8 +26,6 @@ func TransactionPost(w http.ResponseWriter, db *sql.DB, campaignId int, payload 
 
 	query := fmt.Sprintf("INSERT INTO items (campaign_id,name) VALUES (%d,'%s') RETURNING id;", campaignId, payload.Name)
 
-	// log.Println(query)
-
 	result, err := tx.Query(query)
 	if err != nil {
 		err = fmt.Errorf("set %q", err)
@@ -42,8 +33,6 @@ func TransactionPost(w http.ResponseWriter, db *sql.DB, campaignId int, payload 
 		return nil, err
 
 	}
-
-	// log.Println(result)
 
 	var id int
 	result.Next()
@@ -60,21 +49,10 @@ func TransactionPost(w http.ResponseWriter, db *sql.DB, campaignId int, payload 
 	query = fmt.Sprintf("SELECT * FROM items WHERE id = %d;", id)
 	rows, err = db.Query(query)
 
-	// log.Println(query)
-	// log.Println(result)
-
 	if err != nil {
 		err = fmt.Errorf("get %q", err)
-		// errmy.TransactionPost(w, tx)
 		return nil, err
 	}
-
-	// err = tx.Commit()
-	// if err != nil {
-	// 	err = fmt.Errorf("close transaction %q", err)
-	// 	errmy.TransactionPost(w, tx)
-	// 	return nil, err
-	// }
 
 	return rows, nil
 }
@@ -89,7 +67,6 @@ func TransactionPatch(w http.ResponseWriter, db *sql.DB, campaignId int, id int,
 
 	var exists bool
 	query := fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM items WHERE id=%d AND campaign_id=%d);", id, campaignId)
-	log.Println(query)
 
 	err = db.QueryRow(query).Scan(&exists)
 	if err != nil {
@@ -104,7 +81,6 @@ func TransactionPatch(w http.ResponseWriter, db *sql.DB, campaignId int, id int,
 	}
 
 	query = fmt.Sprintf("SELECT * FROM items WHERE id=%d AND campaign_id=%d FOR UPDATE;", id, campaignId)
-	log.Println(query)
 
 	_, err = tx.Exec(query)
 	if err != nil {
@@ -114,7 +90,6 @@ func TransactionPatch(w http.ResponseWriter, db *sql.DB, campaignId int, id int,
 	}
 
 	query = fmt.Sprintf("UPDATE items SET name='%s', description='%q' WHERE id=%d AND campaign_id=%d;", payload.Name, payload.Description, id, campaignId)
-	log.Println(query)
 
 	_, err = tx.Exec(query)
 	if err != nil {
@@ -132,7 +107,6 @@ func TransactionPatch(w http.ResponseWriter, db *sql.DB, campaignId int, id int,
 	}
 
 	query = fmt.Sprintf("SELECT * FROM items WHERE id = %d;", id)
-	log.Println(query)
 
 	rows, err = db.Query(query)
 
@@ -154,7 +128,6 @@ func TransactionDelete(w http.ResponseWriter, db *sql.DB, campaignId int, id int
 
 	var exists bool
 	query := fmt.Sprintf("SELECT EXISTS (SELECT 1 FROM items WHERE id=%d AND campaign_id=%d);", id, campaignId)
-	log.Println(query)
 
 	err = db.QueryRow(query).Scan(&exists)
 	if err != nil {
@@ -169,7 +142,6 @@ func TransactionDelete(w http.ResponseWriter, db *sql.DB, campaignId int, id int
 	}
 
 	query = fmt.Sprintf("SELECT * FROM items WHERE id=%d AND campaign_id=%d FOR UPDATE;", id, campaignId)
-	log.Println(query)
 
 	_, err = tx.Exec(query)
 	if err != nil {
@@ -179,7 +151,6 @@ func TransactionDelete(w http.ResponseWriter, db *sql.DB, campaignId int, id int
 	}
 
 	query = fmt.Sprintf("UPDATE items SET  removed=true WHERE id=%d AND campaign_id=%d;", id, campaignId)
-	log.Println(query)
 
 	_, err = tx.Exec(query)
 	if err != nil {
@@ -197,7 +168,6 @@ func TransactionDelete(w http.ResponseWriter, db *sql.DB, campaignId int, id int
 	}
 
 	query = fmt.Sprintf("SELECT id,campaign_Id,removed FROM items WHERE id = %d;", id)
-	log.Println(query)
 
 	rows, err = db.Query(query)
 
@@ -226,7 +196,6 @@ func TransactionGet(w http.ResponseWriter, db *sql.DB) (rows *sql.Rows, err erro
 	}
 
 	query := "SELECT * FROM items WHERE removed=false;"
-	log.Println(query)
 
 	rows, err = db.Query(query)
 	if err != nil {

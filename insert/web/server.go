@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 )
@@ -11,6 +12,7 @@ import (
 type Cesh struct {
 	PostgreasQL *sql.DB
 	RediaAddr   *string
+	Log         *log.Logger
 }
 
 func (cesh *Cesh) StartServer(addr *string) (err error) {

@@ -5,10 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gomodule/redigo/redis"
-
-	"git_p/test/insert/interaction"
-	"git_p/test/pkg/connect/bd"
+	"git_p/test/insert/db/postgres/interaction"
+	"git_p/test/insert/db/redispkg"
 )
 
 func (cesh *Cesh) handlerPost(w http.ResponseWriter, r *http.Request) {
@@ -20,33 +18,33 @@ func (cesh *Cesh) handlerPost(w http.ResponseWriter, r *http.Request) {
 
 	campaignId, payload, err := interaction.ParseRequestPost(r)
 	if err != nil {
-		log.Println(err)
+		cesh.Log.Println(err)
 		return
 	}
 
 	rows, err := interaction.TransactionPost(w, cesh.PostgreasQL, campaignId, payload)
 	if err != nil {
-		log.Println("ERROR TransactionPost:", err)
+		cesh.Log.Println("ERROR TransactionPost:", err)
 		return
 	}
 
 	item, err := interaction.CreateItem(rows)
 	if err != nil {
-		log.Println("ERROR CreateItem:", err)
+		cesh.Log.Println("ERROR CreateItem:", err)
 		return
 	}
 
 	jsonBytes, err := interaction.CreatePayloadItemRes(&item)
 	if err != nil {
-		log.Println("Ошибка записи JSON:", err)
+		cesh.Log.Println("Ошибка записи JSON:", err)
 		return
 	}
 
 	_, err = w.Write(jsonBytes)
 	if err != nil {
-		log.Println(fmt.Errorf("Ошибка записи JSON:%q", err))
-		return
+		cesh.Log.Println(fmt.Errorf("Ошибка записи JSON:%q", err))
 	}
+	cesh.Log.Println("client:", r.UserAgent(), "method:", r.Method, "id:", item.Id, "campaignId:", campaignId, "new name:", payload.Name)
 }
 
 func (cesh *Cesh) handlerPatch(w http.ResponseWriter, r *http.Request) {
@@ -56,33 +54,35 @@ func (cesh *Cesh) handlerPatch(w http.ResponseWriter, r *http.Request) {
 
 	campaignId, id, payload, err := interaction.ParseRequestPatch(r)
 	if err != nil {
-		log.Println("ParseRequestPatch:", err)
+		cesh.Log.Println("ParseRequestPatch:", err)
 		return
 	}
 
 	rows, err := interaction.TransactionPatch(w, cesh.PostgreasQL, campaignId, id, payload)
 	if err != nil {
-		log.Println("ERROR TransactionPatch:", err)
+		cesh.Log.Println("ERROR TransactionPatch:", err)
 		return
 	}
 
 	item, err := interaction.CreateItem(rows)
 	if err != nil {
-		log.Println("ERROR CreateItem:", err)
+		cesh.Log.Println("ERROR CreateItem:", err)
 		return
 	}
 
 	jsonBytes, err := interaction.CreatePayloadItemRes(&item)
 	if err != nil {
-		log.Println("Ошибка записи JSON:", err)
+		cesh.Log.Println("Ошибка записи JSON:", err)
 		return
 	}
 
 	_, err = w.Write(jsonBytes)
 	if err != nil {
-		log.Println(fmt.Errorf("Ошибка записи JSON:%q", err))
+		cesh.Log.Println(fmt.Errorf("Ошибка записи JSON:%q", err))
 		return
 	}
+
+	cesh.Log.Println("client:", r.UserAgent(), r.Method, "id:", id, "campaignId:", campaignId, "new nate", payload.Name, "description", payload.Description)
 }
 
 func (cesh *Cesh) handlerDelete(w http.ResponseWriter, r *http.Request) {
@@ -92,100 +92,106 @@ func (cesh *Cesh) handlerDelete(w http.ResponseWriter, r *http.Request) {
 
 	campaignId, id, err := interaction.ParseRequestDelete(r)
 	if err != nil {
-		log.Println("ParseRequestDelete:", err)
+		cesh.Log.Println("ParseRequestDelete:", err)
 		return
 	}
 
 	rows, err := interaction.TransactionDelete(w, cesh.PostgreasQL, campaignId, id)
 	if err != nil {
-		log.Println("ERROR TransactionDelete:", err)
+		cesh.Log.Println("ERROR TransactionDelete:", err)
 		return
 	}
 
 	del, err := interaction.CreateDelete(rows)
 	if err != nil {
-		log.Println("ERROR CreateDelete:", err)
+		cesh.Log.Println("ERROR CreateDelete:", err)
 		return
 	}
 
 	jsonBytes, err := interaction.CreatePayloadDeleteRes(&del)
 	if err != nil {
-		log.Println("Ошибка записи JSON:", err)
+		cesh.Log.Println("Ошибка записи JSON:", err)
 		return
 	}
 
-	conn, err := bd.ConectRedis(cesh.RediaAddr)
+	_, err = w.Write(jsonBytes)
 	if err != nil {
-		log.Println(err)
+		log.Println(fmt.Errorf("Ошибка записи JSON:%q", err))
 	}
-	defer conn.Close()
+
+	cesh.Log.Println("client:", r.UserAgent(), r.Method, "id:", id, "campaignId:", campaignId, "remuved:", del.Removed)
+
+	rdb := redispkg.ConectRedis()
 
 	rows, err = interaction.TransactionGet(w, cesh.PostgreasQL)
 	if err != nil {
-		log.Println("ERROR TransactionGet:", err)
+		cesh.Log.Println("ERROR TransactionGet:", err)
 		return
 	}
 
 	items, err := interaction.CreateItems(rows)
 	if err != nil {
-		log.Println("ERROR CreateItems:", err)
+		cesh.Log.Println("ERROR CreateItems:", err)
 		return
 	}
 
 	jsonBytes, err = interaction.CreatePayloadItemsRes(&items)
 	if err != nil {
-		log.Println("Ошибка записи JSON:", err)
+		cesh.Log.Println("Ошибка записи JSON:", err)
 		return
 	}
-	conn.Do("SET", "get", jsonBytes)
 
-	_, err = w.Write(jsonBytes)
+	err = redispkg.Set(rdb, jsonBytes)
 	if err != nil {
-		log.Println(fmt.Errorf("Ошибка записи JSON:%q", err))
+		cesh.Log.Println("Ошибка записи", err)
 		return
 	}
-
 }
 
 func (cesh *Cesh) handlerGet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
-	conn, err := bd.ConectRedis(cesh.RediaAddr)
-	if err != nil {
-		log.Println(err)
-	}
-	defer conn.Close()
+
 	var jsonBytes []byte
 
-	result, err := redis.Bytes(conn.Do("GET", "get"))
+	rdb := redispkg.ConectRedis()
+	result, err := redispkg.Get(rdb)
+
+	cesh.Log.Println("client:", r.UserAgent(), r.Method)
+
 	if err != nil {
-		log.Println(err)
+		cesh.Log.Println(err)
 		rows, err := interaction.TransactionGet(w, cesh.PostgreasQL)
 		if err != nil {
-			log.Println("ERROR TransactionGet:", err)
+			cesh.Log.Println("ERROR TransactionGet:", err)
 			return
 		}
 
 		items, err := interaction.CreateItems(rows)
 		if err != nil {
-			log.Println("ERROR CreateItems:", err)
+			cesh.Log.Println("ERROR CreateItems:", err)
 			return
 		}
 
 		jsonBytes, err = interaction.CreatePayloadItemsRes(&items)
 		if err != nil {
-			log.Println("Ошибка записи JSON:", err)
+			cesh.Log.Println("Ошибка записи JSON:", err)
 			return
 		}
-		conn.Do("SET", "get", jsonBytes)
+
+		err = redispkg.Set(rdb, jsonBytes)
+		if err != nil {
+			cesh.Log.Println("Ошибка записи в redis:", err)
+			return
+		}
 	} else {
 		jsonBytes = result
 	}
 
 	_, err = w.Write(jsonBytes)
 	if err != nil {
-		log.Println(fmt.Errorf("Ошибка записи JSON:%q", err))
+		cesh.Log.Println(fmt.Errorf("Ошибка записи JSON:%q", err))
 		return
 	}
 }

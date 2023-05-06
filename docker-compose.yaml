@@ -26,17 +26,18 @@ services: ##сревисы
       - REDIS_PASSWORD=5678
     volumes:
       - ./redis.conf:/etc/redis/redis.conf
-    command: redis-server /etc/redis/redis.conf  
-    image: redis:7-alpine
+    command: redis-server  /etc/redis/redis.conf
+    image: redis:alpine3.17
     
 
   service_db_clickhouse:
     container_name: service_db_clickhouse
+     
     ports:
-      - "8123:8123"
-      - "9000:9000"
-    # environment:
-    #   - CLICKHOUSE_PASSWORD=9012
-    #   - POSTGRES_USER=pet
-    image: yandex/clickhouse-server:21.8.14.5-alpine
+     - "8123:8123"
+     - "9000:9000"
+    links:
+      - service_db_postgreSQL
+      - service_nats
+    image: clickhouse/clickhouse-server:23.4.2.11-alpine
     #command: ["clickhouse-server", "--password", "${CLICKHOUSE_PASSWORD}"]
