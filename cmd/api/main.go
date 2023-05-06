@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"flag"
-	"sync"
 	"time"
 
 	"git_p/test/insert/natspkg"
@@ -17,7 +16,7 @@ var (
 	connStr   = flag.String("postgres", "postgres://pet:1234@127.0.0.1:5432/postgres?sslmode=disable", "connection parameters")
 	redisAddr = flag.String("redis_addr", "127.0.0.1:6379", "addtes redis")
 
-	mu     = &sync.Mutex{}
+	idlog  = 1
 	bufLog = bytes.Buffer{}
 )
 
@@ -46,7 +45,7 @@ func main() {
 
 	go func() {
 		for {
-			natspkg.SetLog(&bufLog, mu, nc)
+			natspkg.SetLog(&idlog, &bufLog, nc)
 			time.Sleep(10 * time.Second)
 		}
 	}()

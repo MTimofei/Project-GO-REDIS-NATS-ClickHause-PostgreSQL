@@ -24,9 +24,6 @@ func TransactionNotFound(w http.ResponseWriter, tx *sql.Tx) {
 }
 
 func Log(buf *bytes.Buffer) (Log *log.Logger) {
-	// var logmyS = log.New(os.Stdout|buf, "API Log", log.LstdFlags)
-	// var logmyB = log.New(buf, "API Log", log.LstdFlags)
-
-	var logM = log.New(io.MultiWriter(buf, os.Stdout), "", log.LstdFlags)
+	var logM = log.New(io.MultiWriter(buf, os.Stdout), "API", log.LstdFlags)
 	return logM
 }

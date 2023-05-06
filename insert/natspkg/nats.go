@@ -6,11 +6,15 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"sync"
-	"time"
+	"strings"
 
 	"github.com/nats-io/nats.go"
 )
+
+type logMasseg struct {
+	Id  int    `json:"id"`
+	Log string `json:"log"`
+}
 
 // Подключение к серверу NATS
 func Connect() (nc *nats.Conn, err error) {
@@ -25,26 +29,43 @@ func Connect() (nc *nats.Conn, err error) {
 	return nc, nil
 }
 
-// Отправка запроса на тему "log" и ожидание ответа
-func SetLog(buf *bytes.Buffer, mu *sync.Mutex, nc *nats.Conn) (err error) {
-	if reflect.DeepEqual(*buf, bytes.Buffer{}) {
-		return fmt.Errorf("nil buf")
-	}
-	log.Println("in", *buf)
-
-	json, err := json.Marshal(buf)
-	if err != nil {
-		err = fmt.Errorf("Error JSON API:%q", err)
-		log.Println(err)
+// Отправка "log"
+func SetLog(idlog *int, buf *bytes.Buffer, nc *nats.Conn) (err error) {
+	logsStrings := buf.String()
+	if reflect.DeepEqual(logsStrings, "") {
+		log.Println("nil buf")
+		return
 	}
 
-	_, err = nc.Request("log", json, 1000*time.Millisecond)
-	if err != nil {
-		err = fmt.Errorf("Error sending request to API:%q", err)
-		log.Println(err)
-	}
+	logs := strings.Split(logsStrings, "\n")
 	buf.Reset()
-	log.Println("out", *buf)
+
+	for _, i := range logs {
+		*idlog++
+
+		logm := logMasseg{
+			Id:  *idlog,
+			Log: i,
+		}
+
+		log.Println(logm)
+
+		json, _ := json.Marshal(&logm)
+		if err != nil {
+			err = fmt.Errorf("Error JSON API:%q", err)
+			log.Println(err)
+			return
+		}
+		log.Printf("i %s\n", json)
+		_, err = nc.Request("log", json, 0)
+		if err != nil {
+			err = fmt.Errorf("Error sending request to API:%q", err)
+			log.Println(err)
+		}
+	}
+
+	buf.Reset()
+	log.Println("out", fmt.Sprintf("%s", buf.Bytes()))
 	return nil
 }
 
