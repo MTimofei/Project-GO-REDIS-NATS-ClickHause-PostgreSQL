@@ -1,4 +1,4 @@
-package interaction
+package postgres
 
 import (
 	"database/sql"
@@ -208,6 +208,56 @@ func TransactionGet(w http.ResponseWriter, db *sql.DB) (rows *sql.Rows, err erro
 	if err != nil {
 		err = fmt.Errorf("close transaction %q", err)
 		errmy.Transaction(w, tx)
+		return nil, err
+	}
+
+	return rows, nil
+}
+
+func TransactionMigartion(db *sql.DB) (rows *sql.Rows, err error) {
+
+	tx, err := db.Begin()
+	if err != nil {
+		err = fmt.Errorf("open transaction %q", err)
+		tx.Rollback()
+		return nil, err
+	}
+
+	_, err = tx.Exec("LOCK TABLE items IN SHARE MODE")
+	if err != nil {
+		err = fmt.Errorf("blok %q", err)
+		tx.Rollback()
+		return nil, err
+	}
+
+	_, err = tx.Exec("LOCK TABLE campaigns IN SHARE MODE")
+	if err != nil {
+		err = fmt.Errorf("blok %q", err)
+		tx.Rollback()
+		return nil, err
+	}
+
+	query := "SELECT * FROM items;"
+
+	rows, err = db.Query(query)
+	if err != nil {
+		err = fmt.Errorf("get %q", err)
+		tx.Rollback()
+		return nil, err
+	}
+
+	_, err = tx.Exec("INSERT INTO campaigns (name) VALUES ('new campaign')")
+	if err != nil {
+		err = fmt.Errorf("set %q", err)
+		tx.Rollback()
+		return nil, err
+
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		err = fmt.Errorf("close transaction %q", err)
+		tx.Rollback()
 		return nil, err
 	}
 

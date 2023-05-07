@@ -1,4 +1,4 @@
-package interaction
+package postgres
 
 import "time"
 
@@ -11,7 +11,7 @@ type Item struct {
 	CampaignId  int64       `json:"campaignId"`
 	Name        string      `json:"name"`
 	Description interface{} `json:"description"`
-	Priority    string      `json:"priority"`
+	Priority    int         `json:"priority"`
 	Removed     bool        `json:"removed"`
 	CreatedAt   time.Time   `json:"createdAt"`
 }

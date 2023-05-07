@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"git_p/test/insert/db/postgres/interaction"
+	"git_p/test/insert/db/postgres"
 	"git_p/test/insert/db/redispkg"
 )
 
@@ -16,25 +16,25 @@ func (cesh *Cesh) handlerPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	campaignId, payload, err := interaction.ParseRequestPost(r)
+	campaignId, payload, err := postgres.ParseRequestPost(r)
 	if err != nil {
 		cesh.Log.Println(err)
 		return
 	}
 
-	rows, err := interaction.TransactionPost(w, cesh.PostgreasQL, campaignId, payload)
+	rows, err := postgres.TransactionPost(w, cesh.PostgreasQL, campaignId, payload)
 	if err != nil {
 		cesh.Log.Println("ERROR TransactionPost:", err)
 		return
 	}
 
-	item, err := interaction.CreateItem(rows)
+	item, err := postgres.CreateItem(rows)
 	if err != nil {
 		cesh.Log.Println("ERROR CreateItem:", err)
 		return
 	}
 
-	jsonBytes, err := interaction.CreatePayloadItemRes(&item)
+	jsonBytes, err := postgres.CreatePayloadItemRes(&item)
 	if err != nil {
 		cesh.Log.Println("Ошибка записи JSON:", err)
 		return
@@ -52,25 +52,25 @@ func (cesh *Cesh) handlerPatch(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 
-	campaignId, id, payload, err := interaction.ParseRequestPatch(r)
+	campaignId, id, payload, err := postgres.ParseRequestPatch(r)
 	if err != nil {
 		cesh.Log.Println("ParseRequestPatch:", err)
 		return
 	}
 
-	rows, err := interaction.TransactionPatch(w, cesh.PostgreasQL, campaignId, id, payload)
+	rows, err := postgres.TransactionPatch(w, cesh.PostgreasQL, campaignId, id, payload)
 	if err != nil {
 		cesh.Log.Println("ERROR TransactionPatch:", err)
 		return
 	}
 
-	item, err := interaction.CreateItem(rows)
+	item, err := postgres.CreateItem(rows)
 	if err != nil {
 		cesh.Log.Println("ERROR CreateItem:", err)
 		return
 	}
 
-	jsonBytes, err := interaction.CreatePayloadItemRes(&item)
+	jsonBytes, err := postgres.CreatePayloadItemRes(&item)
 	if err != nil {
 		cesh.Log.Println("Ошибка записи JSON:", err)
 		return
@@ -90,25 +90,25 @@ func (cesh *Cesh) handlerDelete(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 
-	campaignId, id, err := interaction.ParseRequestDelete(r)
+	campaignId, id, err := postgres.ParseRequestDelete(r)
 	if err != nil {
 		cesh.Log.Println("ParseRequestDelete:", err)
 		return
 	}
 
-	rows, err := interaction.TransactionDelete(w, cesh.PostgreasQL, campaignId, id)
+	rows, err := postgres.TransactionDelete(w, cesh.PostgreasQL, campaignId, id)
 	if err != nil {
 		cesh.Log.Println("ERROR TransactionDelete:", err)
 		return
 	}
 
-	del, err := interaction.CreateDelete(rows)
+	del, err := postgres.CreateDelete(rows)
 	if err != nil {
 		cesh.Log.Println("ERROR CreateDelete:", err)
 		return
 	}
 
-	jsonBytes, err := interaction.CreatePayloadDeleteRes(&del)
+	jsonBytes, err := postgres.CreatePayloadDeleteRes(&del)
 	if err != nil {
 		cesh.Log.Println("Ошибка записи JSON:", err)
 		return
@@ -123,19 +123,19 @@ func (cesh *Cesh) handlerDelete(w http.ResponseWriter, r *http.Request) {
 
 	rdb := redispkg.ConectRedis()
 
-	rows, err = interaction.TransactionGet(w, cesh.PostgreasQL)
+	rows, err = postgres.TransactionGet(w, cesh.PostgreasQL)
 	if err != nil {
 		cesh.Log.Println("ERROR TransactionGet:", err)
 		return
 	}
 
-	items, err := interaction.CreateItems(rows)
+	items, err := postgres.CreateItems(rows)
 	if err != nil {
 		cesh.Log.Println("ERROR CreateItems:", err)
 		return
 	}
 
-	jsonBytes, err = interaction.CreatePayloadItemsRes(&items)
+	jsonBytes, err = postgres.CreatePayloadItemsRes(&items)
 	if err != nil {
 		cesh.Log.Println("Ошибка записи JSON:", err)
 		return
@@ -162,19 +162,19 @@ func (cesh *Cesh) handlerGet(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		cesh.Log.Println(err)
-		rows, err := interaction.TransactionGet(w, cesh.PostgreasQL)
+		rows, err := postgres.TransactionGet(w, cesh.PostgreasQL)
 		if err != nil {
 			cesh.Log.Println("ERROR TransactionGet:", err)
 			return
 		}
 
-		items, err := interaction.CreateItems(rows)
+		items, err := postgres.CreateItems(rows)
 		if err != nil {
 			cesh.Log.Println("ERROR CreateItems:", err)
 			return
 		}
 
-		jsonBytes, err = interaction.CreatePayloadItemsRes(&items)
+		jsonBytes, err = postgres.CreatePayloadItemsRes(&items)
 		if err != nil {
 			cesh.Log.Println("Ошибка записи JSON:", err)
 			return
@@ -192,6 +192,7 @@ func (cesh *Cesh) handlerGet(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write(jsonBytes)
 	if err != nil {
 		cesh.Log.Println(fmt.Errorf("Ошибка записи JSON:%q", err))
-		return
+
 	}
+	cesh.Log.Println("client:", r.UserAgent(), r.Method)
 }

@@ -33,7 +33,7 @@ func Connect() (nc *nats.Conn, err error) {
 func SetLog(idlog *int, buf *bytes.Buffer, nc *nats.Conn) (err error) {
 	logsStrings := buf.String()
 	if reflect.DeepEqual(logsStrings, "") {
-		log.Println("nil buf")
+		//log.Println("nil buf")
 		return
 	}
 
@@ -48,7 +48,7 @@ func SetLog(idlog *int, buf *bytes.Buffer, nc *nats.Conn) (err error) {
 			Log: i,
 		}
 
-		log.Println(logm)
+		//	log.Println(logm)
 
 		json, _ := json.Marshal(&logm)
 		if err != nil {
@@ -56,7 +56,9 @@ func SetLog(idlog *int, buf *bytes.Buffer, nc *nats.Conn) (err error) {
 			log.Println(err)
 			return
 		}
-		log.Printf("i %s\n", json)
+
+		//log.Printf("i %s\n", json)
+
 		_, err = nc.Request("log", json, 0)
 		if err != nil {
 			err = fmt.Errorf("Error sending request to API:%q", err)
@@ -65,26 +67,6 @@ func SetLog(idlog *int, buf *bytes.Buffer, nc *nats.Conn) (err error) {
 	}
 
 	buf.Reset()
-	log.Println("out", fmt.Sprintf("%s", buf.Bytes()))
+	//log.Println("out", fmt.Sprintf("%s", buf.Bytes()))
 	return nil
 }
-
-// func Server() {
-// 	// Подключение к серверу NATS
-// 	nc, err := nats.Connect(nats.DefaultURL)
-// 	if err != nil {
-// 		fmt.Println("Error connecting to NATS server:", err)
-// 		return
-// 	}
-// 	defer nc.Close()
-
-// 	// Обработка запросов на тему "api.request"
-// 	nc.Subscribe("api.request", func(msg *nats.Msg) {
-// 		fmt.Println("Received request:", string(msg.Data))
-// 		// Отправка ответа на тему, указанную в запросе
-// 		nc.Publish(msg.Reply, []byte("Hello Client!"))
-// 	})
-
-// 	// Бесконечный цикл для ожидания сообщений
-// 	select {}
-// }

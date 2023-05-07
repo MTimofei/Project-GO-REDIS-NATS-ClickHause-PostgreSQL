@@ -7,7 +7,9 @@ services: ##сревисы
       - "5432:5432" ## открытие портов в контейнере 
     environment: ##предворительная настройка
       - POSTGRES_PASSWORD=1234 ##устонавливается пороль
-      - POSTGRES_USER=pet ##устонавливаем имя 
+      - POSTGRES_USER=pet ##устонавливаем имя
+    links:
+      - service_db_clickhouse
     image: postgres:14.3-alpine ## образ для системы
 
   service_nats:
@@ -37,7 +39,6 @@ services: ##сревисы
      - "8123:8123"
      - "9000:9000"
     links:
-      - service_db_postgreSQL
       - service_nats
     image: clickhouse/clickhouse-server:23.4.2.11-alpine
     #command: ["clickhouse-server", "--password", "${CLICKHOUSE_PASSWORD}"]
