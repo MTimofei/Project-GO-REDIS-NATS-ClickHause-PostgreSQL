@@ -6,6 +6,7 @@ import (
 	"fmt"
 )
 
+// создает json обьект обрабатывая ответ CreateItem
 func CreatePayloadItemRes(item *Item) (jsonBytes []byte, err error) {
 	jsonBytes, err = json.Marshal(*item)
 	if err != nil {
@@ -15,6 +16,7 @@ func CreatePayloadItemRes(item *Item) (jsonBytes []byte, err error) {
 	return jsonBytes, err
 }
 
+// создает json обьект обрабатывая ответ CreateDelete
 func CreatePayloadDeleteRes(item *Delete) (jsonBytes []byte, err error) {
 	jsonBytes, err = json.Marshal(*item)
 	if err != nil {
@@ -24,6 +26,7 @@ func CreatePayloadDeleteRes(item *Delete) (jsonBytes []byte, err error) {
 	return jsonBytes, err
 }
 
+// создает json обьект обрабатывая ответ CreateItems
 func CreatePayloadItemsRes(items *[]Item) (jsonBytes []byte, err error) {
 	jsonBytes, err = json.Marshal(items)
 	if err != nil {
@@ -33,6 +36,7 @@ func CreatePayloadItemsRes(items *[]Item) (jsonBytes []byte, err error) {
 	return jsonBytes, err
 }
 
+// разшифровывает ответ от TransactionGet и TransactionMigartion
 func CreateItems(rows *sql.Rows) (items []Item, err error) {
 	for rows.Next() {
 		var item Item
@@ -47,6 +51,7 @@ func CreateItems(rows *sql.Rows) (items []Item, err error) {
 	return items, err
 }
 
+// разшифровывает ответ от TransactionDelete
 func CreateDelete(rows *sql.Rows) (item Delete, err error) {
 	for rows.Next() {
 		defer rows.Close()
@@ -60,6 +65,7 @@ func CreateDelete(rows *sql.Rows) (item Delete, err error) {
 	return item, nil
 }
 
+// разшифровывает ответ от TransactionPost и TransactionPatch
 func CreateItem(rows *sql.Rows) (item Item, err error) {
 	for rows.Next() {
 		defer rows.Close()

@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+// декодирует запрос от клиента с мнтодом post
 func ParseRequestPost(r *http.Request) (campaignId int, payload Post, err error) {
 
 	campaignId, err = strconv.Atoi(r.URL.Query().Get("campaignId"))
@@ -31,6 +32,7 @@ func ParseRequestPost(r *http.Request) (campaignId int, payload Post, err error)
 	return campaignId, payload, nil
 }
 
+// декодирует запрос от клиента с мнтодом patch
 func ParseRequestPatch(r *http.Request) (campaignId int, id int, payload Update, err error) {
 
 	campaignId, err = strconv.Atoi(r.URL.Query().Get("campaignId"))
@@ -62,6 +64,7 @@ func ParseRequestPatch(r *http.Request) (campaignId int, id int, payload Update,
 	return campaignId, id, payload, nil
 }
 
+// декодирует запрос от клиента с мнтодом delete
 func ParseRequestDelete(r *http.Request) (campaignId int, id int, err error) {
 
 	campaignId, err = strconv.Atoi(r.URL.Query().Get("campaignId"))

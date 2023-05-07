@@ -45,12 +45,13 @@ func main() {
 		Log:         log,
 	}
 
-	go func() {
-		for {
-			time.Sleep(10 * time.Minute)
-			migration.Migration(db, clichauseAddr)
-		}
-	}()
+	// go func() {
+	// 	for {
+	// 		time.Sleep(10 * time.Minute)
+	// 		migration.Migration(db, clichauseAddr)
+	// 	}
+	// }()
+	migration.Migration(db, clichauseAddr)
 
 	go func() {
 		for {

@@ -9,6 +9,7 @@ import (
 	"git_p/test/pkg/connect/bd"
 )
 
+// скрипт для миграции
 func Migration(db *sql.DB, addr *string) {
 	conCH, err := bd.ConectClickhause(addr)
 	if err != nil {

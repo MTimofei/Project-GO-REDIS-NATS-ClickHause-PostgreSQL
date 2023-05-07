@@ -8,6 +8,7 @@ import (
 	"git_p/test/pkg/errmy"
 )
 
+// производит транзакцию для post запроса. отдает получившуюся строку в таблице
 func TransactionPost(w http.ResponseWriter, db *sql.DB, campaignId int, payload Post) (rows *sql.Rows, err error) {
 
 	tx, err := db.Begin()
@@ -57,6 +58,7 @@ func TransactionPost(w http.ResponseWriter, db *sql.DB, campaignId int, payload 
 	return rows, nil
 }
 
+// производит транзакцию для patch запроса. отдает получившуюся строку в таблице
 func TransactionPatch(w http.ResponseWriter, db *sql.DB, campaignId int, id int, payload Update) (rows *sql.Rows, err error) {
 	tx, err := db.Begin()
 	if err != nil {
@@ -118,6 +120,7 @@ func TransactionPatch(w http.ResponseWriter, db *sql.DB, campaignId int, id int,
 	return rows, nil
 }
 
+// производит транзакцию для delete запроса. изменяет поле removed на true.
 func TransactionDelete(w http.ResponseWriter, db *sql.DB, campaignId int, id int) (rows *sql.Rows, err error) {
 	tx, err := db.Begin()
 	if err != nil {
@@ -179,6 +182,7 @@ func TransactionDelete(w http.ResponseWriter, db *sql.DB, campaignId int, id int
 	return rows, nil
 }
 
+// производит транзакцию для get запроса. возвращает все не удоленые строки
 func TransactionGet(w http.ResponseWriter, db *sql.DB) (rows *sql.Rows, err error) {
 
 	tx, err := db.Begin()
@@ -214,6 +218,7 @@ func TransactionGet(w http.ResponseWriter, db *sql.DB) (rows *sql.Rows, err erro
 	return rows, nil
 }
 
+// производит транзакцию для осуществления миграции данных. делает запись в таблице campaigns
 func TransactionMigartion(db *sql.DB) (rows *sql.Rows, err error) {
 
 	tx, err := db.Begin()
@@ -237,7 +242,19 @@ func TransactionMigartion(db *sql.DB) (rows *sql.Rows, err error) {
 		return nil, err
 	}
 
-	query := "SELECT * FROM items;"
+	rows, err = db.Query("SELECT MAX(id) FROM campaigns;")
+	if err != nil {
+		err = fmt.Errorf("get %q", err)
+		tx.Rollback()
+		return nil, err
+	}
+
+	var id int
+	rows.Next()
+	defer rows.Close()
+	rows.Scan(&id)
+
+	query := fmt.Sprintf("SELECT * FROM items WHERE campaign_id=%d;", id)
 
 	rows, err = db.Query(query)
 	if err != nil {

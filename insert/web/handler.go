@@ -9,6 +9,7 @@ import (
 	"git_p/test/insert/db/redispkg"
 )
 
+// обработка пост запросса
 func (cesh *Cesh) handlerPost(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
@@ -47,6 +48,7 @@ func (cesh *Cesh) handlerPost(w http.ResponseWriter, r *http.Request) {
 	cesh.Log.Println("client:", r.UserAgent(), "method:", r.Method, "id:", item.Id, "campaignId:", campaignId, "new name:", payload.Name)
 }
 
+// обработка патч запросса
 func (cesh *Cesh) handlerPatch(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPatch {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -85,6 +87,7 @@ func (cesh *Cesh) handlerPatch(w http.ResponseWriter, r *http.Request) {
 	cesh.Log.Println("client:", r.UserAgent(), r.Method, "id:", id, "campaignId:", campaignId, "new nate", payload.Name, "description", payload.Description)
 }
 
+// обработка удоления запросса
 func (cesh *Cesh) handlerDelete(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -148,6 +151,7 @@ func (cesh *Cesh) handlerDelete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// обработка гет запросса
 func (cesh *Cesh) handlerGet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)

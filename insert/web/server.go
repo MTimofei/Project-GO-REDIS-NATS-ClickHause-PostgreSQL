@@ -15,6 +15,7 @@ type Cesh struct {
 	Log         *log.Logger
 }
 
+// функция запуска сервера
 func (cesh *Cesh) StartServer(addr *string) (err error) {
 	n := net.ListenConfig{}
 	lis, err := n.Listen(context.Background(), "tcp", *addr)
@@ -26,6 +27,7 @@ func (cesh *Cesh) StartServer(addr *string) (err error) {
 	return err
 }
 
+// маршрутизатор
 func (cesh *Cesh) router() (mux *http.ServeMux) {
 	mux = http.NewServeMux()
 
